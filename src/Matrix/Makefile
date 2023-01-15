@@ -1,7 +1,8 @@
 NAME	= a.out
 CC		= c++
 ASAN	= -fsanitize=undefined,address,leak
-FLAGS	= -g -Wall -std=c++17
+FLAGS	= -g -mavx2 -mavx -march=native -std=c++20 -Wno-ignored-attributes
+# -Wall -Wextra -Werror -Wno-ignored-attributes -fstack-protector-strong
 SOURCE	= main.cpp
 HEADER	= Matrix.hpp
 OBJECTS	= $(patsubst %,obj/%,$(SOURCE:.cpp=.o))
