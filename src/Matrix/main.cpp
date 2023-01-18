@@ -104,13 +104,25 @@ using namespace std;
 template<typename T>
 struct aligned_ptr {
 	T *m_field;
+	std::size_t size;
 	aligned_ptr(const size_t size = 0) : 
-	m_field{new (std::align_val_t{ alignof(T) }) T[size]} {};
-	aligned_ptr(const aligned_ptr &) = delete;
-	aligned_ptr &operator=(const aligned_ptr &) = delete;
-	aligned_ptr(aligned_ptr &&other) noexcept : m_field(other.p) { other.m_field = nullptr; };
+	m_field{new (std::align_val_t{ alignof(T) }) T[size]}, size{size} {};
+	aligned_ptr(const aligned_ptr &other) :
+	m_field{new (std::align_val_t{ alignof(T) }) T[other.size]}, size{other.size} {
+		for (std::size_t i = 0; i < size; ++i)
+			m_field[i] = other.m_field[i];
+	};
+	aligned_ptr &operator=(const aligned_ptr &other) {
+		delete[] m_field;
+		m_field = new (std::align_val_t{ alignof(T) }) T[other.size];
+		size = other.size;
+		for (std::size_t i = 0; i < size; ++i)
+			m_field[i] = other.m_field[i];
+		return *this;
+	};
+	aligned_ptr(aligned_ptr &&other) noexcept : m_field(other.m_field) { other.m_field = nullptr; };
 	aligned_ptr &operator=(aligned_ptr &&other) noexcept { m_field = other.m_field; other.m_field = nullptr; };
-	~aligned_ptr() { free(m_field); };
+	~aligned_ptr() { delete[] m_field; };
 
 	__attribute__((always_inline)) T& operator*() { return *m_field; };
 };
@@ -119,8 +131,8 @@ template<typename T>
 struct X {
 	aligned_ptr<T> p;
 	X(const size_t size = 0) : p(size) {};
-	X(const X&) = delete;
-	X &operator=(const X&) = delete;
+	X(const X&) = default;
+	X &operator=(const X&) = default;
 	X(X&&) noexcept = default;
 	X &operator=(X&&) noexcept = default;
 	~X() = default; 
@@ -129,12 +141,11 @@ struct X {
 };
 
 int main() {
-	// X<float> a(1);
-	X<float> a(1);
+	X<float> a(20000000);
+	X<float> b(42);
+	X<float> c(a);
+	X<float> d;
 
-	*a = 21;
-
-	cout << *a << endl;
 }
 
 
