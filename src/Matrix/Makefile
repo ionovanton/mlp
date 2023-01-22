@@ -1,5 +1,5 @@
 NAME	= a.out
-CC		= c++
+CC		= g++
 ASAN	= -fsanitize=undefined,address,leak
 FLAGS	= -g -mavx2 -mavx -march=native -std=c++17 -Wno-ignored-attributes
 # -Wall -Wextra -Werror -Wno-ignored-attributes -fstack-protector-strong
