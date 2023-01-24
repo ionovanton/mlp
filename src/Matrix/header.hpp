@@ -33,8 +33,8 @@
 #define debug_log
 
 #ifdef debug_log
-#define func_log std::clog << __PRETTY_FUNCTION__ << std::endl
-#define class_func_log std::clog << "[ " << this << " ] " << __PRETTY_FUNCTION__ << std::endl
+#define func_log std::cerr << __PRETTY_FUNCTION__ << std::endl
+#define class_func_log std::cerr << "[ " << this << " ] " << __PRETTY_FUNCTION__ << std::endl
 #else
 #define func_log
 #define class_func_log

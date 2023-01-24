@@ -1,7 +1,7 @@
 NAME	= a.out
 CC		= g++
 ASAN	= -fsanitize=undefined,address,leak
-FLAGS	= -g -mavx2 -mavx -march=native -std=c++20 -Wno-ignored-attributes
+FLAGS	= -g -mavx2 -mavx -march=native -std=c++17 -Wno-ignored-attributes
 # -Wall -Wextra -Werror -Wno-ignored-attributes -fstack-protector-strong
 SOURCE	= main.cpp
 HEADER	= Matrix.hpp
