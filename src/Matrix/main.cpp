@@ -36,7 +36,7 @@ public:
 
     static void init(const_size_type n) {
         allocator_state<value_type>::m_start = static_cast<std::shared_ptr<value_type[]>>
-        (new (std::align_val_t{ alignof(value_type) }, std::nothrow) value_type[n]);
+        (new (std::align_val_t{ alignof(value_type) }) value_type[n]);
         allocator_state<value_type>::m_current = allocator_state<value_type>::m_start.get();
         allocator_state<value_type>::m_num_allocations = 0;
         allocator_state<value_type>::m_size = n;
@@ -101,7 +101,6 @@ int main() {
     const size_t n = 6;
     allocator_state<program_type>::init(n);
     test<program_type, n> t;
-
 
 	t.a[0] = 41;
 	t.a[1] = 23;
