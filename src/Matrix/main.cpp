@@ -33,14 +33,6 @@ public:
     allocator_state &operator=(const allocator_state&) = delete;
     allocator_state(const allocator_state&&) = delete;
     allocator_state &operator=(const allocator_state&&) = delete;
-
-    static void init(const_size_type n) {
-        allocator_state<value_type>::m_start = static_cast<std::shared_ptr<value_type[]>>
-        (new (std::align_val_t{ alignof(value_type) }) value_type[n]);
-        allocator_state<value_type>::m_current = allocator_state<value_type>::m_start.get();
-        allocator_state<value_type>::m_num_allocations = 0;
-        allocator_state<value_type>::m_size = n;
-    }
 };
 
 template<typename T>
@@ -74,47 +66,96 @@ struct linear_alloc {
 		auto ret_ptr = allocator_state<T>::m_current;
 		allocator_state<T>::m_current += n;
 		allocator_state<T>::m_num_allocations += n;
+		// std::cout << "DEBUG: allocated " << allocator_state<T>::m_size << std::endl;
 		return ret_ptr;
 	}
 
 	void deallocate([[maybe_unused]] pointer, [[maybe_unused]] size_type) {}
+
+	/* BUG: alloc_type::init(n) can be used with initialization like: container(n + 1); */
+    static void init(const_size_type n) {
+        allocator_state<value_type>::m_start = static_cast<std::shared_ptr<value_type[]>>
+        (new (std::align_val_t{ alignof(value_type) }) value_type[n]);
+        // if (!m_start) {
+        //     std::clog << "[WARNING] aligned new failed" << std::endl;
+        //     m_start = static_cast<std::shared_ptr<value_type[]>>(new value_type[n]);
+        // }
+        allocator_state<value_type>::m_current = allocator_state<value_type>::m_start.get();
+        allocator_state<value_type>::m_num_allocations = 0;
+        allocator_state<value_type>::m_size = n;
+    }
 };
 
 template<class T, class U>
-bool operator==(const linear_alloc<T>&, const linear_alloc<U>&) { return true; }
+bool operator==(const linear_alloc<T>&, const linear_alloc<T>&) { return true; }
  
 template<class T, class U>
 bool operator!=(const linear_alloc<T>&, const linear_alloc<U>&) { return false; }
 
+template<typename T, typename Alloc>
+class Matrix {
+private:
+	using value_type = T;
+	using size_type = size_t;
+	using const_size_type = const size_type;
+	using pointer = T*;
+	using container = std::vector<value_type, Alloc>;
+	using pair = std::pair<size_type, size_type>;
 
-template<typename T, std::size_t N>
-struct test {
-    test() : a(N / 2), b(N / 2) {};
-    std::vector<T, linear_alloc<T>> a;
-    std::vector<T, linear_alloc<T>> b;
+	pair shape;
+	size_type size;
+	container c;
+
+	void inspect() {
+		std::cout << "Matrix: " << this << "\n" << "Shape: " << shape.first << 'x' << shape.second  << "\n";
+		std::cout << "{\n";
+		auto &[column, row] = shape;
+		for (int y = 0; y < row; ++y) {
+			for (int x = 0; x < column; ++x) {
+				std::cout << c[x + y * column] << ' ';
+			}
+			std::cout << (y == row - 1 ? "" : "\n");
+		}
+		std::cout << "\n}\n\n";
+	}
+
+public:
+	Matrix() = delete;
+	Matrix(std::initializer_list<value_type> li, pair shape) : shape{shape}, size{shape.first * shape.second}, c{li} {}
+	Matrix(pair shape) : shape{shape}, size{shape.first * shape.second}, c(size) {}
+
+	Matrix(const Matrix&) = default;
+	Matrix &operator=(const Matrix&) = default;
+	Matrix(Matrix&&) noexcept = default;
+	Matrix &operator=(Matrix&&) noexcept = default;
+
+	~Matrix() { inspect(); };
+
+	Matrix operator+(const Matrix &rhs) {
+		// if (shape != rhs.shape)
+		// 	throw std::bad_function_call(std::string(__PRETTY_FUNCTION__ + ": shape doesn't match\n"));
+		Matrix ret(shape);
+		for (size_type i = 0; i < size; ++i) {
+			ret.c[i] = c[i] + rhs.c[i];
+		}
+		return ret;
+	}
 };
 
 using namespace std;
 
 int main() {
-    using program_type = float;
-    const size_t n = 6;
-    allocator_state<program_type>::init(n);
-    test<program_type, n> t;
+	using value_type = int;
+	using alloc_type = linear_alloc<value_type>;
 
-	t.a[0] = 41;
-	t.a[1] = 23;
-	t.a[2] = 890;
-	t.b[0] = 99;
-	t.b[1] = 1;
-	t.b[2] = 33;
+	alloc_type::init(18);
 
-	inspect_container(t.a);
-	inspect_container(t.b);
+	Matrix<value_type, alloc_type> a({1,2,3,4,5,6}, {3, 2});
+	Matrix<value_type, alloc_type> b({1,2,3,4,5,6}, {3, 2});
 
-	auto ptr = &t.a[0];
-	cout << *ptr << endl;
+	auto c = a + b;
 
-	for (int i = 0; i < n; ++i, ++ptr)
-		cout << ptr << ' ' << *ptr << '\n';
+
+
+
 }
