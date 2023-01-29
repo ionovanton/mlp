@@ -94,16 +94,6 @@ bool operator!=(const linear_alloc<T>&, const linear_alloc<U>&) { return false; 
  */
 template<typename T, typename Alloc>
 class Matrix {
-private:
-	using value_type = T;
-	using size_type = size_t;
-	using const_size_type = const size_type;
-	using container = std::vector<value_type, Alloc>;
-	using pair = std::pair<size_type, size_type>;
-
-	pair shape;
-	size_type size;
-	container c;
 
 	void inspect() {
 		std::cout << "Matrix: " << this << "\n" << "Shape: " << shape.first << 'x' << shape.second  << "\n";
@@ -116,8 +106,19 @@ private:
 			}
 			std::cout << (y == rows - 1 ? "" : "\n");
 		}
-		std::cout << " }\n\n";
+		std::cout << "}\n\n";
 	}
+
+private:
+	using value_type = T;
+	using size_type = size_t;
+	using const_size_type = const size_type;
+	using container = std::vector<value_type, Alloc>;
+	using pair = std::pair<size_type, size_type>;
+
+	pair shape;
+	size_type size;
+	container c;
 
 public:
 	Matrix() = delete;
@@ -169,13 +170,11 @@ int main() {
 
 	alloc_type::init(100);
 
-	matrix a({1,2,3,4,5,6}, {3, 2});
-	matrix b({1,2,3,4,5,6}, {2, 3});
-
+	matrix a({1, 2, 3, 4, 5, 6}, {3, 2});
+	matrix b({1, 2, 3, 4, 5, 6}, {2, 3});
+	matrix check_against({9, 12, 15, 19, 26, 33, 29, 40, 51}, {3, 3});
 
 	auto c = a * b;
-	// auto d = a + b;
 
-
-
+	cout << (c == check_against) << endl;
 }
