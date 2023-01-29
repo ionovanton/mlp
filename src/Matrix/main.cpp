@@ -88,11 +88,9 @@ bool operator!=(const linear_alloc<T>&, const linear_alloc<U>&) { return false; 
 
 
 /**
- *
- * @param pair container which values are @arg @c row-count and @arg @c column-count
+ * @param pair container which values are @arg @c y-count and @arg @c column-count
  * @param size total elements
  * @param c container
- * 
  */
 template<typename T, typename Alloc>
 class Matrix {
@@ -123,10 +121,8 @@ private:
 
 public:
 	Matrix() = delete;
-	Matrix(std::initializer_list<value_type> li, pair shape)
-	: shape{shape}, size{shape.first * shape.second}, c{li} {}
-	Matrix(pair shape)
-	: shape{shape}, size{shape.first * shape.second}, c(size) {}
+	Matrix(std::initializer_list<value_type> li, pair shape) : shape{shape}, size{shape.first * shape.second}, c{li} {}
+	Matrix(pair shape) : shape{shape}, size{shape.first * shape.second}, c(size) {}
 
 	Matrix(const Matrix&) = default;
 	Matrix &operator=(const Matrix&) = default;
@@ -139,7 +135,7 @@ public:
 		if (shape != rhs.shape)
 			throw std::invalid_argument("bad_shape");
 		Matrix ret(shape);
-		for (size_type i = 0; i < size; ++i)
+		for (int i = 0; i < size; ++i)
 			ret.c[i] = c[i] + rhs.c[i];
 		return ret;
 	}
@@ -148,15 +144,20 @@ public:
 		if (shape.second != rhs.shape.first)
 			throw std::invalid_argument("bad_shape");
 		Matrix ret({shape.first, rhs.shape.second});
-		const auto inner = shape.second;
+		const auto inners = shape.second;
 		const auto &[rows, columns] = ret.shape;
-		for (size_type y = 0; y < rows; ++y) {
-			for (size_type i = 0; i < inner; ++i) {
-				for (size_type x = 0; x < columns; ++x) {
-					ret.c[y * columns + x] += c[y * columns + i] * rhs.c[i * columns + x];
+		for (int y = 0; y < rows; y++) {
+			for (int i = 0; i < inners; i++) {
+				for (int x = 0; x < columns; x++) {
+				ret.c[y * columns + x] +=
+					c[y * inners + i] * rhs.c[i * columns + x];
 		} } }
 		return ret;
 	}
+
+	bool operator==(const Matrix &rhs) {
+		return size == rhs.size && shape == rhs.shape && c == rhs.c;
+	};
 };
 
 using namespace std;
@@ -169,10 +170,12 @@ int main() {
 	alloc_type::init(100);
 
 	matrix a({1,2,3,4,5,6}, {3, 2});
-	matrix b({3,1,2,6,5,4}, {2, 3});
+	matrix b({1,2,3,4,5,6}, {2, 3});
+
 
 	auto c = a * b;
 	// auto d = a + b;
+
 
 
 }
