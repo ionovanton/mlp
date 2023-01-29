@@ -66,20 +66,14 @@ struct linear_alloc {
 		auto ret_ptr = allocator_state<T>::m_current;
 		allocator_state<T>::m_current += n;
 		allocator_state<T>::m_num_allocations += n;
-		// std::cout << "DEBUG: allocated " << allocator_state<T>::m_size << std::endl;
 		return ret_ptr;
 	}
 
 	void deallocate([[maybe_unused]] pointer, [[maybe_unused]] size_type) {}
 
-	/* BUG: alloc_type::init(n) can be used with initialization like: container(n + 1); */
     static void init(const_size_type n) {
         allocator_state<value_type>::m_start = static_cast<std::shared_ptr<value_type[]>>
         (new (std::align_val_t{ alignof(value_type) }) value_type[n]);
-        // if (!m_start) {
-        //     std::clog << "[WARNING] aligned new failed" << std::endl;
-        //     m_start = static_cast<std::shared_ptr<value_type[]>>(new value_type[n]);
-        // }
         allocator_state<value_type>::m_current = allocator_state<value_type>::m_start.get();
         allocator_state<value_type>::m_num_allocations = 0;
         allocator_state<value_type>::m_size = n;
@@ -92,13 +86,20 @@ bool operator==(const linear_alloc<T>&, const linear_alloc<T>&) { return true; }
 template<class T, class U>
 bool operator!=(const linear_alloc<T>&, const linear_alloc<U>&) { return false; }
 
+
+/**
+ *
+ * @param pair container which values are @arg @c row-count and @arg @c column-count
+ * @param size total elements
+ * @param c container
+ * 
+ */
 template<typename T, typename Alloc>
 class Matrix {
 private:
 	using value_type = T;
 	using size_type = size_t;
 	using const_size_type = const size_type;
-	using pointer = T*;
 	using container = std::vector<value_type, Alloc>;
 	using pair = std::pair<size_type, size_type>;
 
@@ -108,21 +109,24 @@ private:
 
 	void inspect() {
 		std::cout << "Matrix: " << this << "\n" << "Shape: " << shape.first << 'x' << shape.second  << "\n";
-		std::cout << "{\n";
-		auto &[column, row] = shape;
-		for (int y = 0; y < row; ++y) {
-			for (int x = 0; x < column; ++x) {
-				std::cout << c[x + y * column] << ' ';
+		std::cout << "{";
+		auto &[rows, columns] = shape;
+		for (int y = 0; y < rows; ++y) {
+			std::cout << (y == 0 ? " " : "  ");
+			for (int x = 0; x < columns; ++x) {
+				std::cout << c[x + y * columns] << ' ';
 			}
-			std::cout << (y == row - 1 ? "" : "\n");
+			std::cout << (y == rows - 1 ? "" : "\n");
 		}
-		std::cout << "\n}\n\n";
+		std::cout << " }\n\n";
 	}
 
 public:
 	Matrix() = delete;
-	Matrix(std::initializer_list<value_type> li, pair shape) : shape{shape}, size{shape.first * shape.second}, c{li} {}
-	Matrix(pair shape) : shape{shape}, size{shape.first * shape.second}, c(size) {}
+	Matrix(std::initializer_list<value_type> li, pair shape)
+	: shape{shape}, size{shape.first * shape.second}, c{li} {}
+	Matrix(pair shape)
+	: shape{shape}, size{shape.first * shape.second}, c(size) {}
 
 	Matrix(const Matrix&) = default;
 	Matrix &operator=(const Matrix&) = default;
@@ -132,12 +136,25 @@ public:
 	~Matrix() { inspect(); };
 
 	Matrix operator+(const Matrix &rhs) {
-		// if (shape != rhs.shape)
-		// 	throw std::bad_function_call(std::string(__PRETTY_FUNCTION__ + ": shape doesn't match\n"));
+		if (shape != rhs.shape)
+			throw std::invalid_argument("bad_shape");
 		Matrix ret(shape);
-		for (size_type i = 0; i < size; ++i) {
+		for (size_type i = 0; i < size; ++i)
 			ret.c[i] = c[i] + rhs.c[i];
-		}
+		return ret;
+	}
+
+	Matrix operator*(const Matrix &rhs) {
+		if (shape.second != rhs.shape.first)
+			throw std::invalid_argument("bad_shape");
+		Matrix ret({shape.first, rhs.shape.second});
+		const auto inner = shape.second;
+		const auto &[rows, columns] = ret.shape;
+		for (size_type y = 0; y < rows; ++y) {
+			for (size_type i = 0; i < inner; ++i) {
+				for (size_type x = 0; x < columns; ++x) {
+					ret.c[y * columns + x] += c[y * columns + i] * rhs.c[i * columns + x];
+		} } }
 		return ret;
 	}
 };
@@ -147,15 +164,15 @@ using namespace std;
 int main() {
 	using value_type = int;
 	using alloc_type = linear_alloc<value_type>;
+	using matrix = Matrix<value_type, alloc_type>;
 
-	alloc_type::init(18);
+	alloc_type::init(100);
 
-	Matrix<value_type, alloc_type> a({1,2,3,4,5,6}, {3, 2});
-	Matrix<value_type, alloc_type> b({1,2,3,4,5,6}, {3, 2});
+	matrix a({1,2,3,4,5,6}, {3, 2});
+	matrix b({3,1,2,6,5,4}, {2, 3});
 
-	auto c = a + b;
-
-
+	auto c = a * b;
+	// auto d = a + b;
 
 
 }
