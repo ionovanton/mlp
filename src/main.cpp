@@ -28,5 +28,10 @@ int main() {
 
 TODO:
 remove all exceptions
+Make two variants:
+	matrix with std::array -> template should be able to be instantiated with Container argument
+	all tmp matricies will use heap linear allocator:
+		one allocator
+		multiple allocator with different states
 
 */
