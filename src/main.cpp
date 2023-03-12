@@ -1,6 +1,7 @@
 #include "header.hpp"
 #include "LinearAlloc.hpp"
-#include "NetworkMatrixImpl.hpp"
+// #include "NetworkMatrixImpl.hpp"
+#include "Matrix.hpp"
 
 using namespace std;
 
@@ -67,6 +68,13 @@ int main() {
 /*
 
 TODO:
+(!!!) - если перегруженные операторы
+используют аллокацию в динамических матрицах,
+то это огромная проблема :)
+Наверное, придется узнавать кто и сколько раз вызывает
+аллокатор.
+
+
 remove all exceptions
 Make two variants:
 	matrix with std::array -> template should be able to be instantiated with Container argument

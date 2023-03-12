@@ -40,6 +40,7 @@ private:
 	using container = C;
 	using size_type = size_t;
 	using const_size_type = const size_type;
+	using dynamic_container = std::vector<value_type, LinearAlloc<value_type>>;
 	using initializer_list = std::initializer_list<value_type>;
 	using pair = std::pair<size_type, size_type>;
 
@@ -79,7 +80,11 @@ public:
 	Matrix operator*(const Matrix &rhs) {
 		if (shape.second != rhs.shape.first)
 			throw std::invalid_argument("bad matrix shape");
-		Matrix ret(pair{shape.first, rhs.shape.second});
+		Matrix ret;
+		if constexpr (std::is_same<container, dynamic_container>::value)
+			ret = Matrix(pair{shape.first, rhs.shape.second});
+		else
+			ret = Matrix(container(), pair{shape.first, rhs.shape.second});
 		const auto inners = shape.second;
 		const auto &[rows, columns] = ret.shape;
 		for (int y = 0; y < rows; y++) {
@@ -104,12 +109,12 @@ public:
 
 template<typename T>
 class DynamicMatrix : public Matrix<T, std::vector<T, LinearAlloc<T>>> {
+	using Base = Matrix<T, std::vector<T, LinearAlloc<T>>, DynamicMatrix<T>>;
 	using value_type = T;
 	using size_type = std::size_t;
 	using pair = std::pair<size_type, size_type>;
 	using initializer_list = std::initializer_list<value_type>;
 	using container = std::vector<value_type, LinearAlloc<value_type>>;
-	using Base = Matrix<value_type, container>;
 
 public:
 	DynamicMatrix() : Base() {}
@@ -118,12 +123,12 @@ public:
 };
 
 template<typename T, std::size_t N>
-class StaticMatrix : public Matrix<T, std::array<T, N>> {
+class StaticMatrix : public Matrix<T, std::array<T, N>, StaticMatrix<T, N>> {
+	using Base = Matrix<T, std::array<T, N>, StaticMatrix<T, N>>;
 	using value_type = T;
 	using size_type = std::size_t;
 	using container = std::array<value_type, N>;
 	using pair = std::pair<size_type, size_type>;
-	using Base = Matrix<value_type, container>;
 	
 public:
 	StaticMatrix(container &&c, pair &&shape) : Base(std::move(c), std::move(shape)) {}

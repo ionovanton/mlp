@@ -52,7 +52,7 @@ struct LinearAlloc {
 	LinearAlloc(const LinearAlloc&) noexcept = default;
 	LinearAlloc() noexcept = default;
 	~LinearAlloc() = default;
-	
+
 	/* what is this for? */
 	template <class U>
 	LinearAlloc(const LinearAlloc<U>&) noexcept {}
