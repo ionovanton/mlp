@@ -41,7 +41,6 @@ template<typename T>
 std::size_t allocator_state<T>::m_size;
 
 
-
 template<typename T>
 struct LinearAlloc {
 	using value_type = T;

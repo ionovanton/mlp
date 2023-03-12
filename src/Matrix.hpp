@@ -1,5 +1,7 @@
 
 #include <initializer_list>
+#include <algorithm>
+#include <utility>
 
 template<typename C>
 void inspect_container(C &c) {
@@ -12,7 +14,7 @@ void inspect_container(C &c) {
 	std::cout << std::endl;
 }
 
-template<typename T, typename Alloc>
+template<typename T, typename C>
 class Matrix {
 public:
 	void inspect() {
@@ -35,16 +37,11 @@ public:
 
 private:
 	using value_type = T;
+	using container = C;
 	using size_type = size_t;
 	using const_size_type = const size_type;
-	using container = std::vector<value_type, Alloc>;
 	using initializer_list = std::initializer_list<value_type>;
 	using pair = std::pair<size_type, size_type>;
-
-	// TODO: create utility class for random values
-	// std::random_device rnd{};
-    // std::mersenne_twister_engine engine{rd()};
-	// std::normal_distribution<value_type> gen(2, 5);
 
 	pair shape;
 	size_type size;
@@ -52,17 +49,16 @@ private:
 
 public:
 	Matrix() : shape({0, 0}), size{0}, c{} {};
-	Matrix(initializer_list li, pair shape) : shape{shape}, size{shape.first * shape.second}, c{li} {}
-	Matrix(pair shape) : shape{shape}, size{shape.first * shape.second}, c(size) {}
+	Matrix(initializer_list li, pair &&shape) : shape{shape}, size{shape.first * shape.second}, c{li} {}
+	Matrix(pair &&shape) : shape{shape}, size{shape.first * shape.second}, c(size) {}
+	Matrix(container &&c, pair &&shape) : shape{shape}, size{c.size()}, c{c} {}
 
 	Matrix(const Matrix&) = default;
 	Matrix &operator=(const Matrix&) = default;
 	Matrix(Matrix&&) noexcept = default;
 	Matrix &operator=(Matrix&&) noexcept = default;
 
-	~Matrix() {
-		// inspect();
-	};
+	virtual ~Matrix() {};
 
 	Matrix operator+(const Matrix &rhs) {
 		if (shape != rhs.shape)
@@ -83,7 +79,7 @@ public:
 	Matrix operator*(const Matrix &rhs) {
 		if (shape.second != rhs.shape.first)
 			throw std::invalid_argument("bad matrix shape");
-		Matrix ret({shape.first, rhs.shape.second});
+		Matrix ret(pair{shape.first, rhs.shape.second});
 		const auto inners = shape.second;
 		const auto &[rows, columns] = ret.shape;
 		for (int y = 0; y < rows; y++) {
@@ -104,12 +100,71 @@ public:
 		}
 		return true;
 	};
-
-	// TODO: random generator initialization
-	// namespace generator {
-	// 	value_type zero(value_type) { return 0; }
-	// 	value_type norm(value_type n) { return gen(engine) }
-
-	// } // generator
 };
+
+template<typename T>
+class DynamicMatrix : public Matrix<T, std::vector<T, LinearAlloc<T>>> {
+	using value_type = T;
+	using size_type = std::size_t;
+	using pair = std::pair<size_type, size_type>;
+	using initializer_list = std::initializer_list<value_type>;
+	using container = std::vector<value_type, LinearAlloc<value_type>>;
+	using Base = Matrix<value_type, container>;
+
+public:
+	DynamicMatrix() : Base() {}
+	DynamicMatrix(initializer_list li, pair &&shape) : Base(li, std::move(shape)) {}
+	DynamicMatrix(pair &&shape) : Base(std::move(shape)) {}
+};
+
+template<typename T, std::size_t N>
+class StaticMatrix : public Matrix<T, std::array<T, N>> {
+	using value_type = T;
+	using size_type = std::size_t;
+	using container = std::array<value_type, N>;
+	using pair = std::pair<size_type, size_type>;
+	using Base = Matrix<value_type, container>;
+	
+public:
+	StaticMatrix(container &&c, pair &&shape) : Base(std::move(c), std::move(shape)) {}
+	StaticMatrix(pair &&shape) : Base::shape(shape) {}
+};
+
+template<typename T, std::size_t N>
+class SomeContainer {
+	template<typename A, std::size_t X, std::size_t Y>
+	friend SomeContainer<A, X + Y> operator+(SomeContainer<A, X> &, SomeContainer<A, Y> &);
+
+	std::array<T, N> c;
+public:
+
+	void inspect() {
+		for (auto e : c) {
+			std::cout << e << ' ';
+		}
+		std::cout << '\n';
+	}
+
+	SomeContainer(std::array<T, N> &&x) : c{x} {}
+	SomeContainer() = default;
+};
+
+template<typename A, std::size_t X, std::size_t Y>
+SomeContainer<A, X + Y> operator+(SomeContainer<A, X> &x, SomeContainer<A, Y> &y) {
+	SomeContainer<A, X + Y> ret;
+	std::copy(x.c.begin(), x.c.end(), ret.c.begin());
+	std::copy(y.c.begin(), y.c.end(), ret.c.begin() + X);
+	return ret;
+}
+
+// int main() {
+// 	SomeContainer<int, 5> x({1, 2, 3, 7, 8});
+// 	SomeContainer<int, 3> y({20, 21, 22});
+// 	SomeContainer<int, 8> z = x + y;
+
+// 	z.inspect();
+// 	// 1 2 3 7 8 20 21 22
+// }
+
+
 
