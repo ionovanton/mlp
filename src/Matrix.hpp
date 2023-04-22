@@ -61,30 +61,56 @@ public:
 
 	virtual ~Matrix() {};
 
-	Matrix operator+(const Matrix &rhs) {
-		if (shape != rhs.shape)
-			throw std::invalid_argument("bad matrix shape");
-		Matrix ret(*this);
-		for (int i = 0; i < size; ++i)
-			ret.c[i] += rhs.c[i];
-		return ret;
-	}
+	// Matrix operator+(const Matrix &rhs) {
+	// 	if (shape != rhs.shape)
+	// 		throw std::invalid_argument("bad matrix shape");
+	// 	Matrix ret(*this);
+	// 	for (int i = 0; i < size; ++i)
+	// 		ret.c[i] += rhs.c[i];
+	// 	return ret;
+	// }
 
-	Matrix operator+(const value_type rhs) {
-		Matrix ret(*this);
-		for (int i = 0; i < size; ++i)
-			ret.c[i] += rhs;
-		return ret;
-	}
+	// Matrix operator+(const value_type rhs) {
+	// 	Matrix ret(*this);
+	// 	for (int i = 0; i < size; ++i)
+	// 		ret.c[i] += rhs;
+	// 	return ret;
+	// }
 
-	Matrix operator*(const Matrix &rhs) {
+	// Matrix operator*(const Matrix &rhs) {
+	// 	if (shape.second != rhs.shape.first)
+	// 		throw std::invalid_argument("bad matrix shape");
+	// 	Matrix ret;
+	// 	if constexpr (std::is_same<container, dynamic_container>::value)
+	// 		ret = Matrix(pair{shape.first, rhs.shape.second});
+	// 	else
+	// 		ret = Matrix(container(), pair{shape.first, rhs.shape.second});
+	// 	const auto inners = shape.second;
+	// 	const auto &[rows, columns] = ret.shape;
+	// 	for (int y = 0; y < rows; y++) {
+	// 		for (int i = 0; i < inners; i++) {
+	// 			for (int x = 0; x < columns; x++) {
+	// 			ret.c[y * columns + x] +=
+	// 				c[y * inners + i] * rhs.c[i * columns + x];
+	// 	} } }
+	// 	return ret;
+	// }
+
+	// bool operator==(const Matrix &rhs) {
+	// 	if (size != rhs.size || shape != rhs.shape)
+	// 		return false;
+	// 	for (int i = 0; i < size; ++i) {
+	// 		if (c[i] != rhs.c[i])
+	// 			return false;
+	// 	}
+	// 	return true;
+	// };
+
+protected:
+	inline __attribute__((always_inline))
+	void multiply(const Matrix &rhs) {
 		if (shape.second != rhs.shape.first)
 			throw std::invalid_argument("bad matrix shape");
-		Matrix ret;
-		if constexpr (std::is_same<container, dynamic_container>::value)
-			ret = Matrix(pair{shape.first, rhs.shape.second});
-		else
-			ret = Matrix(container(), pair{shape.first, rhs.shape.second});
 		const auto inners = shape.second;
 		const auto &[rows, columns] = ret.shape;
 		for (int y = 0; y < rows; y++) {
@@ -93,23 +119,24 @@ public:
 				ret.c[y * columns + x] +=
 					c[y * inners + i] * rhs.c[i * columns + x];
 		} } }
-		return ret;
 	}
 
-	bool operator==(const Matrix &rhs) {
-		if (size != rhs.size || shape != rhs.shape)
-			return false;
-		for (int i = 0; i < size; ++i) {
-			if (c[i] != rhs.c[i])
-				return false;
-		}
-		return true;
-	};
+	inline __attribute__((always_inline))
+	void add(const value_type rhs) {
+		for (int i = 0; i < size; ++i)
+			ret.c[i] += rhs;
+	}
+
+	inline __attribute__((always_inline))
+	void add(const Matrix &rhs) {
+		for (int i = 0; i < size; ++i)
+			ret.c[i] += rhs.c[i];
+	}
 };
 
 template<typename T>
 class DynamicMatrix : public Matrix<T, std::vector<T, LinearAlloc<T>>> {
-	using Base = Matrix<T, std::vector<T, LinearAlloc<T>>, DynamicMatrix<T>>;
+	using Base = Matrix<T, std::vector<T, LinearAlloc<T>>>;
 	using value_type = T;
 	using size_type = std::size_t;
 	using pair = std::pair<size_type, size_type>;
@@ -120,20 +147,38 @@ public:
 	DynamicMatrix() : Base() {}
 	DynamicMatrix(initializer_list li, pair &&shape) : Base(li, std::move(shape)) {}
 	DynamicMatrix(pair &&shape) : Base(std::move(shape)) {}
+
+	DynamicMatrix operator*(const DynamicMatrix &rhs) {
+		DynamicMatrix ret;
+		multiply(rhs);
+		return ret;
+	}
 };
 
 template<typename T, std::size_t N>
-class StaticMatrix : public Matrix<T, std::array<T, N>, StaticMatrix<T, N>> {
-	using Base = Matrix<T, std::array<T, N>, StaticMatrix<T, N>>;
+class StaticMatrix : public Matrix<T, std::array<T, N>> {
+	using Base = Matrix<T, std::array<T, N>>;
 	using value_type = T;
 	using size_type = std::size_t;
 	using container = std::array<value_type, N>;
 	using pair = std::pair<size_type, size_type>;
-	
+
 public:
 	StaticMatrix(container &&c, pair &&shape) : Base(std::move(c), std::move(shape)) {}
 	StaticMatrix(pair &&shape) : Base::shape(shape) {}
+
 };
+
+
+
+
+
+
+
+
+
+
+
 
 template<typename T, std::size_t N>
 class SomeContainer {

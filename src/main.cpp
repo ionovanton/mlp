@@ -35,17 +35,22 @@ int main() {
 	}
 
 	{
-		smatrix<6> a({1, 2, 3, 4, 5, 6}, {3, 2});
-		smatrix<6> b({1, 2, 3, 4, 5, 6}, {2, 3});
-		smatrix<8> c({3, 4, 5, 6, 7, 8, 9, 10}, {2, 4});
-		smatrix<9> check_against_1({9, 12, 15, 19, 26, 33, 29, 40, 51}, {3, 3});
-		smatrix<8> check_against_2({4, 5, 6, 7, 8, 9, 10, 11}, {2, 4});
+		// smatrix<6> a({1, 2, 3, 4, 5, 6}, {3, 2});
+		// smatrix<6> b({1, 2, 3, 4, 5, 6}, {2, 3});
+		// smatrix<8> c({3, 4, 5, 6, 7, 8, 9, 10}, {2, 4});
+		// smatrix<9> check_against_1({9, 12, 15, 19, 26, 33, 29, 40, 51}, {3, 3});
+		// smatrix<8> check_against_2({4, 5, 6, 7, 8, 9, 10, 11}, {2, 4});
+		// smatrix<8> check_against_3({2, 4, 6, 8, 10, 12}, {2, 3});
 
-		auto res_1 = a * b;
-		auto res_2 = c + 1;
+		// auto res_1 = a * b;
+		// auto res_2 = c + 1;
+		// auto res_3 = a + a;
+
+		// cout << "hi" << endl;
 
 		// cout << (res_1 == check_against_1) << endl;
 		// cout << (res_2 == check_against_2) << endl;
+		// cout << (res_3 == check_against_3) << endl;
 	}
 
 	// NetworkMatrixImpl<2, value_type, alloc_type> net({2, 3});
