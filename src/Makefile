@@ -12,7 +12,7 @@ TMP		= vgcore.* *.dSYM obj
 all: $(NAME)
 
 $(NAME): $(OBJECTS) $(HEADER)
-	$(CC) $(FLAGS) $(INCLUDE) $(OBJECTS) -o $@
+	$(CC) $(FLAGS) $(ASAN) $(INCLUDE) $(OBJECTS) -o $@
 
 obj/%.o: %.cpp $(HEADER)
 	mkdir -p obj
