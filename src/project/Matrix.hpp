@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <utility>
 #include <type_traits>
+#include <vector>
 
 #include "LinearAlloc.hpp"
 
@@ -35,6 +36,7 @@ class Matrix {
 	container c;
 
 public:
+	Matrix() : size{nullptr}, shape{nullptr}, c{nullptr} {}
 	Matrix(pair shape, int) : size{shape.first * shape.second}, shape{shape}, c{} {}
 	Matrix(pair shape) : size{shape.first * shape.second}, shape{shape}, c(shape.first * shape.second) {}
 	Matrix(container c, pair shape) : size{shape.first * shape.second}, shape{shape}, c{c} {}
@@ -109,6 +111,7 @@ class DynamicMatrix : public Matrix<T, std::vector<T, LinearAlloc<T>>> {
 	using Base = Matrix<value_type, container>;
 
 public:
+	DynamicMatrix() : Base() {}
 	DynamicMatrix(pair &&shape) : Base(shape) {}
 	DynamicMatrix(container &&c, pair &&shape) : Base(c, shape) {}
 	~DynamicMatrix() = default;

@@ -1,0 +1,1 @@
+cls; cmake -S . -B build && make -C project/ && ./project/mlp 

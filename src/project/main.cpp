@@ -1,4 +1,5 @@
-#include "header.hpp"
+
+
 #include "Network.hpp"
 
 using namespace std;
@@ -46,10 +47,14 @@ void test_dynamic()
 	cout << (res_3 == check_against_3) << endl;
 }
 
-int main() {	
-	alloc_type::init(2000);
-	test_static();
-	test_dynamic();
+int main() {
+	// alloc_type::init(2000);
+	// test_dynamic();
+	// test_static();
+	csv::CSVReader reader("../datasets/emnist-letters-test.csv");
+
+	auto a = reader.begin()->begin()->get<int>();
+	printf("%d\n", a);
 }
 
 /*
