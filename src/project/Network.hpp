@@ -3,7 +3,6 @@
 #include <functional>
 
 #include "Matrix.hpp"
-#include "csv.hpp"
 
 template<typename T>
 struct CostFunction {
@@ -72,5 +71,5 @@ public:
 		alloc_type::init(2000);
 	}
 
-	// TODO: parser csv to dmatrix
+	// TODO: parser csv to smatrix
 };

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "LinearAlloc.hpp"
+#include "csv.hpp"
 
 template<typename C>
 void inspect_container(C &c) {
@@ -30,6 +31,7 @@ class Matrix {
 	using container = C;
 	using size_type = std::size_t;
 	using pair = std::pair<size_type, size_type>;
+	using csv_reader = csv::CSVReader;
 
 	pair shape;
 	size_type size;
@@ -40,6 +42,15 @@ public:
 	Matrix(pair shape, int) : size{shape.first * shape.second}, shape{shape}, c{} {}
 	Matrix(pair shape) : size{shape.first * shape.second}, shape{shape}, c(shape.first * shape.second) {}
 	Matrix(container c, pair shape) : size{shape.first * shape.second}, shape{shape}, c{c} {}
+	Matrix(csv_reader &&reader, pair shape) : size{shape.first * shape.second}, shape{shape}, c{} {
+		size_type i = 0;
+		for (auto row : reader) {
+			for (auto field : row) {
+				c[i] = field.get<value_type>();
+				++i;
+			}
+		}	
+	}
 	virtual ~Matrix() {
 		// this->inspect();
 	}
@@ -52,6 +63,16 @@ public:
 				return false;
 		}
 		return true;
+	}
+
+	inline __attribute__((always_inline))
+	value_type &operator()(size_type y, size_type x) {
+		return c[x + y * shape.second];
+	}
+
+	inline __attribute__((always_inline))
+	value_type &operator()(size_type i) {
+		return c[i];
 	}
 
 	Matrix operator+(const value_type rhs) {
@@ -83,6 +104,11 @@ public:
 					c[y * inners + i] * rhs.c[i * columns + x];
 		} } }
 		return ret;
+	}
+
+	void shuffle_data() {
+		const auto &[row_number, row_length] = shape;
+		std::swap_ranges(std::begin(c), std::begin(c) + row_length * 1, std::begin(c) + row_length * 1000);
 	}
 
 protected:
@@ -125,10 +151,13 @@ class StaticMatrix : public Matrix<T, std::array<T, N * M>> {
 	template<typename U, size_type X, size_type Y>
 	using container = std::array<U, X * Y>;
 	using Base = Matrix<value_type, container<T, N, M>>;
+	using csv_reader = csv::CSVReader;
 
 public:
 	StaticMatrix() : Base({N, M}, int()) {}
 	StaticMatrix(container<T, N, M> &&c) : Base(c, {N, M}) {}
+	StaticMatrix(csv_reader &&reader) : Base(std::move(reader), {N, M}) {}
+
 	~StaticMatrix() = default;
 
 	template<std::size_t X, std::size_t Y>

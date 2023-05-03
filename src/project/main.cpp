@@ -4,7 +4,7 @@
 
 using namespace std;
 
-using value_type = int;
+using value_type = double;
 using size_type = std::size_t;
 using alloc_type = LinearAlloc<value_type>;
 template<size_type N, size_type M>
@@ -51,10 +51,30 @@ int main() {
 	// alloc_type::init(2000);
 	// test_dynamic();
 	// test_static();
-	csv::CSVReader reader("../datasets/emnist-letters-test.csv");
 
-	auto a = reader.begin()->begin()->get<int>();
-	printf("%d\n", a);
+	smatrix<14800, 784> a(csv::CSVReader{"../datasets/emnist-letters-test.csv"});
+	// TODO: fix stack overflow
+
+	// csv::CSVReader reader("../datasets/emnist-letters-test.csv");
+	// smatrix<14800, 784> b;
+
+	// t[0] = 42;
+
+	// std::cout << t[0] << '\n';
+
+	// a.shuffle_data();
+	
+
+
+	// smatrix<88800, 27> b;
+
+	// for (int y = 0; y < 14800; ++y) {
+	// 	reader.read_row(row);
+	// 	for (int x = 0; x < 27; ++x) {
+	// 		a(y, x) = row.begin()->get<value_type>();
+	// 	}
+	// }
+	
 }
 
 /*
